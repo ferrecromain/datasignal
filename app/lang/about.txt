@@ -1,0 +1,7 @@
+DataSignal est un logiciel graphique qui exploite les capacités du programme console "minimodem"
+Ce dernier permet de transmettre de la donnée par audio, et doit par conséquent être au préalable installé sur votre machine avant de pouvoir utiliser DataSignal.
+
+Minimodem est developpé par Kamal Mostafa <kamal@whence.com>
+http://www.whence.com/minimodem/
+
+DataSignal est developpé par FERREC Romain <romain@elgeekador.net>

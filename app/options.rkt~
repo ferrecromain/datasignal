@@ -1,0 +1,43 @@
+#lang racket
+
+(require racket/gui)
+
+(provide options)
+
+(define (options app-tools p-frame textRefresher)
+  (define config (hash-ref app-tools "config"))
+  (define minimodem (hash-ref app-tools "minimodem"))
+  
+  (define DIALOG (new dialog% (label "Options") (parent p-frame)
+                      [min-width 300] [min-height 200]))
+  
+  (define VPANEL (new vertical-panel% (parent DIALOG) (alignment '(left top))))
+  (define BAUDS (new text-field% (label "Bauds : ") (parent VPANEL)
+                     (init-value (~a (send config bauds)))))
+  (define ALSA (new check-box% (label "Utiliser ALSA") (parent VPANEL)
+                    (value (send config alsa))))
+  (define SAMPLE-RATE (new text-field% (label "Fréquence d'echantillonage : ") (parent VPANEL)
+                           (init-value (~a (send config samplerate)))))
+
+  (define HPANEL (new horizontal-panel% (parent DIALOG) (stretchable-height #f)
+                      (alignment '(center center))))
+  (define OK (new button% (label "Valider") (parent HPANEL)
+                  (callback (lambda (obj evt)
+                              (send config setBauds (send BAUDS get-value))
+                              (send config setAlsa (send ALSA get-value))
+                              (send config setSamplerate (send SAMPLE-RATE get-value))
+                              (send minimodem setBauds (send config bauds))
+                              (send minimodem setAlsa (send config alsa))
+                              (send minimodem setSampleRate (send config samplerate))
+                              (send textRefresher stop)
+                              (send minimodem killBothTransmissionReception)
+                              (send textRefresher setMmOutputPort (send minimodem getOutputPort))
+                              (send textRefresher start)
+                              (send DIALOG show #f)))))
+                              
+  (define CANCEL (new button% (label "Annuler") (parent HPANEL)
+                      (callback (lambda (obj evt)
+                                  (send DIALOG show #f)))))
+  (send DIALOG show #t))
+  
+  

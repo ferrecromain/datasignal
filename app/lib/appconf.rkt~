@@ -1,0 +1,34 @@
+#lang racket
+
+(require "../../lib/config.rkt")
+
+(provide appconfig%)
+
+(define appconfig%
+  (class config%
+    (define/public (bauds)
+      (send this get "bauds"))
+
+    (define/public (samplerate)
+      (send this get "samplerate"))
+
+    (define/public (alsa)
+      (send this get "alsa"))
+
+
+    (define/public (setBauds bauds)
+      (when (string? bauds)
+        (set! bauds (string->number bauds)))
+      (when (integer? bauds)
+        (send this setTo "bauds" bauds)))
+    
+    (define/public (setAlsa alsa)
+      (send this setTo "alsa" alsa))
+    
+    (define/public (setSamplerate samplerate)
+      (when (string? samplerate)
+        (set! samplerate (string->number samplerate)))
+      (when (integer? samplerate)
+        (send this setTo "samplerate" samplerate)))
+    
+    (super-new)))

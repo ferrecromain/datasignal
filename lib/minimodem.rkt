@@ -1,0 +1,65 @@
+#lang racket
+
+#| API d'interaction avec minimodem |#
+
+(provide minimodem%)
+
+(define minimodem%
+  (class object%
+    (init-field
+     [bauds 40]                         ; Niveau de bauds
+     [alsa #t]                      ; Alsa sinon pulseaudio
+     [sampleRate 48000])               ; Niveau d'echantillonage
+    
+    (define transmission-ports (void)) ; entrées/sorties transmission
+    (define reception-ports (void))    ; entrées/sorties reception
+
+    ; Par rapport aux attributs, construit le debut de la commande
+    (define (prepareCommand)
+      (format "minimodem -q~a ~a ~a"
+              (if alsa " -A" "")
+              (format "-R ~a" sampleRate)
+              bauds))
+
+    ; Envoie le texte str sur le port correspondant à l'entrée standart de minimodem
+    ; créer le processus si inexistant
+    (define/public (sendText str)
+      (when (void? transmission-ports)
+        (set! transmission-ports (process (format "~a --tx" (prepareCommand))))
+        (file-stream-buffer-mode (cadr transmission-ports) 'none))
+      (fprintf (cadr transmission-ports) (format "\n~a\n" str)))
+
+    ; Bloque jusqu'a ce qu'un texte se terminant par \n soit lu dans le port,
+    ; puis le retourne
+    (define/public (getOutputPort)
+      (when (void? reception-ports)
+        (set! reception-ports (process (format "~a --print-filter --rx" (prepareCommand))))
+        (file-stream-buffer-mode (car reception-ports) 'none))
+      (car reception-ports))
+
+    ; Termine le processus de transmission
+    (define/public (killTransmission)
+      (when (list? transmission-ports)
+        (close-output-port (cadr transmission-ports))
+        (set! transmission-ports ((list-ref transmission-ports 4) 'kill ))))
+
+    ; Termine le processus de reception
+    (define/public (killReception)
+      (when (list? reception-ports)
+        (close-input-port (car reception-ports))
+        (set! reception-ports ((list-ref reception-ports 4) 'kill ))))
+
+    (define/public (killBothTransmissionReception)
+      (send this killReception)
+      (send this killTransmission))
+      
+    (define/public (setBauds val)
+      (set! bauds val))
+    
+    (define/public (setAlsa val)
+      (set! alsa val))
+    
+    (define/public (setSampleRate val)
+      (set! sampleRate val))
+    
+    (super-new)))
